@@ -41,9 +41,10 @@ You will get a compiler error if you forget to uncomment!
 * Open the sketch from subdirectory 'rawirdecode' in Arduino IDE and build
 
 ### PlatformIO
-* platformio.ini contains build definitions for Arduino Mega and ESP32 (tested on M5STACK ATOM LITE)
+* platformio.ini contains build definitions for Arduino Mega, ESP32 (both tested on M5STACK ATOM LITE) and ESP8266 (tested on nodemcu)
 * On Mega, connect the receiver data pin to GPIO 2
 * On ESP32, connect the receiver data pin to GPIO 25
+* On ESP8266, connect the receiver data pin to GPIO 5
 
 ## Instructions
 
