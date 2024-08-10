@@ -22,6 +22,7 @@
   #define AUX
   #define ZHLT01_REMOTE
   #define ZHJG01_REMOTE
+  #define KY26_REMOTE
 #else
   // low-memory device,
   // uncomment the define corresponding with your remote
@@ -46,9 +47,10 @@
   //#define AUX
   //#define ZHLT01_REMOTE
   //#define PHILCO
+  //#define KY26_REMOTE
 #endif
 
-#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)&&!defined(ZHJG01_REMOTE)&&!defined(PHILCO)
+#if !defined(MITSUBISHI_ELECTRIC)&&!defined(FUJITSU)&&!defined(MITSUBISHI_HEAVY)&&!defined(DAIKIN)&&!defined(SHARP_)&&!defined(CARRIER)&&!defined(PANASONIC_CKP)&&!defined(PANASONIC_CS)&&!defined(HYUNDAI)&&!defined(GREE)&&!defined(GREE_YAC)&&!defined(FUEGO)&&!defined(TOSHIBA)&&!defined(NIBE)&&!defined(AIRWELL)&&!defined(HITACHI)&&!defined(SAMSUNG)&&!defined(BALLU)&&!defined(AUX)&&!defined(ZHLT01_REMOTE)&&!defined(ZHJG01_REMOTE)&&!defined(PHILCO)&&!defined(KY26_REMOTE)
   #error  You must uncomment at least one brand define!!
 #endif
 
@@ -116,6 +118,9 @@
 #endif
 #if defined(PHILCO)
   bool decodePhilco(byte *bytes, int byteCount);
+#endif
+#if defined(KY26_REMOTE)
+  bool decodeKY26Remote(byte *bytes, int byteCount);
 #endif
 
 
@@ -599,6 +604,9 @@ void decodeProtocols()
 #endif
 #if defined(PHILCO)
   knownProtocol = decodePhilco(bytes, byteCount);
+#endif
+#if defined(KY26_REMOTE)
+  knownProtocol = decodeKY26Remote(bytes, byteCount);
 #endif
 
   if (!knownProtocol)
