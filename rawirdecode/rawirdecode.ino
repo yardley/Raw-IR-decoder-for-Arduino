@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(ESP32)
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(ESP32) || defined(ESP8266)
   #define MITSUBISHI_ELECTRIC
   #define FUJITSU
   #define MITSUBISHI_HEAVY
@@ -143,6 +143,8 @@
   #define IRpin          4
 #elif defined(ESP32)
   #define IRpin          25 // G25 on M5STACK ATOM LITE
+#elif defined(ESP8266)
+  #define IRpin          5
 #else
   #define IRpin_PIN      PIND
   #define IRpin          2
@@ -204,6 +206,10 @@ void setup(void) {
   Serial.print(F("Enter choice: "));
 
   while (modelChoice == 0) {
+    #if defined(ESP8266)
+      yield();
+    #endif
+
     int selection = Serial.read();
 
     if ( selection != -1 ) {
@@ -283,7 +289,11 @@ void loop(void) {
   if (modelChoice != 9) {
     receivePulses();
   } else {
-    while ((currentpulse = Serial.readBytesUntil('\n', symbols+1, sizeof(symbols)-1)) == 0) {}
+    while ((currentpulse = Serial.readBytesUntil('\n', symbols+1, sizeof(symbols)-1)) == 0) {
+      #if defined(ESP8266)
+        yield();
+      #endif
+    }
     currentpulse++;
   }
 
@@ -324,9 +334,17 @@ void receivePulses(void) {
 
   while (currentpulse < sizeof(symbols))
   {
+    #if defined(ESP8266)
+      yield();
+    #endif
+
      highpulse = 0;
 
      while (getPinState()) {
+      #if defined(ESP8266)
+        yield();
+      #endif
+
        // pin is still HIGH
 
        // count off another few microseconds
@@ -375,6 +393,10 @@ void receivePulses(void) {
     // same as above
     lowpulse = 0;
     while (! getPinState()) {
+      #if defined(ESP8266)
+        yield();
+      #endif
+
        // pin is still LOW
        lowpulse++;
        delayMicroseconds(RESOLUTION);
@@ -406,6 +428,8 @@ void receivePulses(void) {
 bool getPinState() {
 #if defined(ESP32)
   return gpio_get_level(gpio_num_t(IRpin));
+#elif defined(ESP8266)
+  return digitalRead(IRpin);
 #else
   return (IRpin_PIN & _BV(IRpin));
 #endif
