@@ -10,6 +10,7 @@
   #define PANASONIC_CKP
   #define PANASONIC_CS
   #define HYUNDAI
+  #define OLIMPIA // try model choice 3
   #define GREE
   #define GREE_YAC
   #define FUEGO
@@ -35,6 +36,7 @@
   //#define PANASONIC_CKP
   //#define PANASONIC_CS
   //#define HYUNDAI
+  //#define OLIMPIA
   //#define GREE
   //#define GREE_YAC
   //#define FUEGO
@@ -81,6 +83,9 @@
 #endif
 #if defined(HYUNDAI)
   bool decodeHyundai(byte *bytes, int pulseCount);
+#endif
+#if defined(OLIMPIA)
+  bool decodeOlimpiaMaestro(byte *bytes, int pulseCount);
 #endif
 #if defined(GREE) or defined(GREE_YAC)
   bool decodeGree(byte *bytes, int pulseCount);
@@ -149,7 +154,7 @@
 #elif defined(ESP32)
   #define IRpin          25 // G25 on M5STACK ATOM LITE
 #elif defined(ESP8266)
-  #define IRpin          5
+  #define IRpin          2
 #else
   #define IRpin_PIN      PIND
   #define IRpin          2
@@ -457,7 +462,7 @@ void printPulses(void) {
   // Print the decoded bytes
   Serial.println(F("Bytes:"));
 
-  // Decode the string of bits to a byte array
+  // Decode the string of bits to a byte array from LSB first to MSB last for each byte
   for (uint16_t i = 0; i < currentpulse; i++) {
 
     if (symbols[i] == '0' || symbols[i] == '1') {
@@ -568,6 +573,9 @@ void decodeProtocols()
 #endif
 #if defined(HYUNDAI)
   knownProtocol = decodeHyundai(bytes, currentpulse);
+#endif
+#if defined(OLIMPIA)
+  knownProtocol = decodeOlimpiaMaestro(bytes, byteCount);
 #endif
 #if defined(GREE) or defined(GREE_YAC)
   knownProtocol = decodeGree(bytes, currentpulse) || decodeGree_YAC(bytes, currentpulse);
