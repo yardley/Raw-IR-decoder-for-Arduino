@@ -163,6 +163,20 @@
 // the maximum pulse we'll listen for - 65 milliseconds is a long time
 #define MAXPULSE 65000
 
+struct  AppSettings {
+  bool printSymbols;
+  bool printPulses;
+  bool printByteString;
+  bool printTimings;
+};
+
+AppSettings appSettings = {
+  .printSymbols = false,
+  .printPulses = false,
+  .printByteString = false,
+  .printTimings = false
+};
+
 // what our timing resolution should be, larger is better
 // as its more 'precise' - but too large and you wont get
 // accurate timing
@@ -450,24 +464,26 @@ void printPulses(void) {
   int bitCount = 0;
   byte currentByte = 0;
 
-  Serial.print(F("\nNumber of symbols: "));
-  Serial.println(currentpulse);
+  if (appSettings.printSymbols) {
+    Serial.print(F("\nNumber of symbols: "));
+    Serial.println(currentpulse);
 
-  // Print the symbols (0, 1, H, h, W)
-  Serial.println(F("Symbols:"));
-  //Serial.println("--1-------2-------3-------4-------5-------6-------7-------8-------9-------0-------1-------2-------3-------4-------5-------");
-  //Serial.println("--123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678");
-  Serial.println(symbols+1);
+    // Print the symbols (0, 1, H, h, W)
+    Serial.println(F("Symbols:"));
+    //Serial.println("--1-------2-------3-------4-------5-------6-------7-------8-------9-------0-------1-------2-------3-------4-------5-------");
+    //Serial.println("--123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678");
+    Serial.println(symbols+1);
+  }
 
   // Print the decoded bytes
-  Serial.println(F("Bytes:"));
+  if (appSettings.printPulses) Serial.println(F("Bytes:"));
 
   // Decode the string of bits to a byte array from LSB first to MSB last for each byte
   for (uint16_t i = 0; i < currentpulse; i++) {
 
     if (symbols[i] == '0' || symbols[i] == '1') {
 
-      if (bitCount == 0) {
+      if (bitCount == 0 && appSettings.printPulses) {
         if (byteCount < 10)
           Serial.print("0");
         Serial.print(byteCount); Serial.print(":  ");
@@ -480,22 +496,24 @@ void printPulses(void) {
         currentByte |= 0x80;
       }
 
-      Serial.print(symbols[i]);
-      if (bitCount == 4) {
+      if (appSettings.printPulses) Serial.print(symbols[i]);
+      if (bitCount == 4 && appSettings.printPulses) {
         Serial.print("|");
 
       }
       if (bitCount == 8) {
         bytes[byteCount++] = currentByte;
         bitCount = 0;
-        Serial.print(" | ");
-        printByte(currentByte);
-        Serial.print(" | ");
+        if (appSettings.printPulses) Serial.print(" | ");
+        if (appSettings.printPulses) printByte(currentByte);
+        if (appSettings.printPulses) Serial.print(" | ");
 
-        for (int mask = 0x80; mask > 0; mask >>= 1) {
-            Serial.print((currentByte & mask) ? "1" : "0");
+        if (appSettings.printPulses) {
+          for (int mask = 0x80; mask > 0; mask >>= 1) {
+              Serial.print((currentByte & mask) ? "1" : "0");
+          }
+          Serial.println(" ");
         }
-        Serial.println(" ");
       }
     } else { // Ignore bits which do not form octets
       bitCount = 0;
@@ -503,34 +521,33 @@ void printPulses(void) {
     }
   }
 
-  // Print the byte array
-  for (int i = 0; i < byteCount; i++) {
-    // if (bytes[i] < 0x10) {
-    //   Serial.print(F("0"));
-    // }
-    // Serial.print(bytes[i],HEX);
-
-    printByte(bytes[i]);
-    if ( i < byteCount - 1 ) {
-      Serial.print(F(","));
+  if (appSettings.printByteString) {
+    // Print the byte array
+    for (int i = 0; i < byteCount; i++) {
+      printByte(bytes[i]);
+      if ( i < byteCount - 1 ) {
+        Serial.print(F(","));
+      }
     }
+    Serial.println();
   }
-  Serial.println();
 
-  // Print the timing constants
-  Serial.println(F("Timings (in us): "));
-  Serial.print(F("PAUSE SPACE:  "));
-  Serial.println(space_pause_avg);
-  Serial.print(F("HEADER MARK:  "));
-  Serial.println(mark_header_avg);
-  Serial.print(F("HEADER SPACE: "));
-  Serial.println(space_header_avg);
-  Serial.print(F("BIT MARK:     "));
-  Serial.println(mark_bit_avg);
-  Serial.print(F("ZERO SPACE:   "));
-  Serial.println(space_zero_avg);
-  Serial.print(F("ONE SPACE:    "));
-  Serial.println(space_one_avg);
+  if (appSettings.printTimings) {
+    // Print the timing constants
+    Serial.println(F("Timings (in us): "));
+    Serial.print(F("PAUSE SPACE:  "));
+    Serial.println(space_pause_avg);
+    Serial.print(F("HEADER MARK:  "));
+    Serial.println(mark_header_avg);
+    Serial.print(F("HEADER SPACE: "));
+    Serial.println(space_header_avg);
+    Serial.print(F("BIT MARK:     "));
+    Serial.println(mark_bit_avg);
+    Serial.print(F("ZERO SPACE:   "));
+    Serial.println(space_zero_avg);
+    Serial.print(F("ONE SPACE:    "));
+    Serial.println(space_one_avg);
+  }
 }
 
 void printByte(byte bytetoprint) {
