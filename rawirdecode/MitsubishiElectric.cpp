@@ -1,5 +1,13 @@
 #include <Arduino.h>
 
+void printUnknownCode(String type, uint8_t bytes) {
+  Serial.print(F("⚠️ unknown "));
+  Serial.print(type);
+  Serial.print(F(" (raw value: 0x"));
+  Serial.print(bytes, HEX);
+  Serial.println(F(")"));
+}
+
 bool decodeMitsubishiElectric(byte *bytes, int byteCount)
 {
   // If this looks like a Mitsubishi FD-25 or FE code...
@@ -22,7 +30,8 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
     }
 
     // Power mode
-    switch (bytes[5]) {
+    uint8_t powerMode = bytes[5];
+    switch (powerMode) {
       case 0x00:
         Serial.println(F("POWER OFF"));
         break;
@@ -30,13 +39,14 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
         Serial.println(F("POWER ON"));
         break;
       default:
-        Serial.println(F("POWER unknown"));
+        printUnknownCode("Power mode", powerMode);
         break;
     }
 
     // Operating mode
+    uint8_t operatingMode = bytes[6] & 0x38; // 0b00111000
     Serial.print(F("MODE "));
-    switch (bytes[6] & 0x38) { // 0b00111000
+    switch (operatingMode) {
       case 0x38:
         Serial.println(F("FAN"));
         break;
@@ -57,41 +67,53 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
         Serial.println(F("DRY"));
         break;
       default:
-        Serial.println(F("unknown"));
+        printUnknownCode("Operating mode", operatingMode);
         break;
     }
 
     // I-See
+    uint8_t iSee = bytes[6] & 0x40; // 0b01000000
     Serial.print(F("I-See: "));
-    switch (bytes[6] & 0x40) { // 0b01000000
+    switch (iSee) {
       case 0x40:
         Serial.println(F("ON"));
         break;
       case 0x00:
         Serial.println(F("OFF"));
         break;
+      default:
+        printUnknownCode("I-See", iSee);
+        break;
     }
 
     // Clean
+    uint8_t clean = bytes[14] & 0x04; // 0b00000100
     Serial.print(F("Clean: "));
-    switch (bytes[14] & 0x04) { // 0b00000100
+    switch (clean) {
       case 0x04:
         Serial.println(F("ON"));
         break;
       case 0x00:
         Serial.println(F("OFF"));
         break;
+      default:
+        printUnknownCode("Clean", clean);
+        break;
     }
 
 
     // Plasma
+    uint8_t plasma = bytes[15] & 0x40;
     Serial.print(F("Plasma: "));
-    switch (bytes[15] & 0x40) { // 0b01000000
+    switch (plasma) { // 0b01000000
       case 0x40:
         Serial.println(F("ON"));
         break;
       case 0x00:
         Serial.println(F("OFF"));
+        break;
+      default:
+        printUnknownCode("Plasma", plasma);
         break;
     }
 
@@ -104,8 +126,9 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
     }
 
     // Fan speed
+    uint8_t fanSpeed = bytes[9] & 0x07; // 0b00000111
     Serial.print(F("FAN "));
-    switch (bytes[9] & 0x07) { // 0b00000111
+    switch (fanSpeed) {
       case 0x00:
         Serial.println(F("AUTO"));
         break;
@@ -122,13 +145,14 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
         Serial.println(F("4"));
         break;
       default:
-        Serial.println(F("unknown"));
+        printUnknownCode("Fan speed", fanSpeed);
         break;
     }
 
     // Vertical air direction
+    uint8_t verticalAirDirection = bytes[9] & 0xF8; // 0b11111000
     Serial.print(F("VANE: "));
-    switch (bytes[9] & 0xF8) { // 0b11111000
+    switch (verticalAirDirection) {
       case 0x40: // 0b01000
         Serial.println(F("AUTO1?"));
         break;
@@ -157,13 +181,14 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
         Serial.println(F("AUTO3?"));
         break;
       default:
-        Serial.println(F("unknown"));
+        printUnknownCode("Vertical air direction", verticalAirDirection);
         break;
     }
 
     // Horizontal air direction
+    uint8_t horizontalAirDirection = bytes[8] & 0xF0; // 0b11110000
     Serial.print(F("WIDE VANE: "));
-    switch (bytes[8] & 0xF0) { // 0b11110000
+    switch (horizontalAirDirection) {
       case 0x00:
         Serial.println(F("AREA"));
         break;
@@ -185,14 +210,18 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
       case 0xC0:
         Serial.println(F("SWING"));
         break;
+      case 0x80:
+        Serial.println(F("L/R SPLIT"));
+        break;
       default:
-        Serial.println(F("unknown"));
+        printUnknownCode("Horizontal air direction", horizontalAirDirection);
         break;
     }
 
     // Horizontal air direction, area mode
+    uint8_t horizontalAirDirectionAreaMode = bytes[13] & 0xC0; // 0b11110000
     Serial.print(F("AREA MODE: "));
-    switch (bytes[13] & 0xC0) { // 0b11000000
+    switch (horizontalAirDirectionAreaMode) { // 0b11000000
       case 0x00:
         Serial.println(F("OFF"));
         break;
@@ -205,11 +234,15 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
       case 0xC0:
         Serial.println(F("RIGHT"));
         break;
+      default:
+        printUnknownCode("Horizontal air direction, area mode", horizontalAirDirectionAreaMode);
+        break;
     }
 
     // Installation position
+    uint8_t installationPosition = bytes[14] & 0x18; // 0b00011000
     Serial.print(F("INSTALL POSITION: "));
-    switch (bytes[14] & 0x18) { // 0b00011000
+    switch (installationPosition) { // 0b00011000
       case 0x08:
         Serial.println(F("LEFT"));
         break;
@@ -220,7 +253,7 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
         Serial.println(F("RIGHT"));
         break;
       default:
-        Serial.println(F("unknown"));
+        printUnknownCode("Installation position", installationPosition);
         break;
     }
 
