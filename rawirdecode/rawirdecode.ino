@@ -2,28 +2,28 @@
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(ESP32) || defined(ESP8266)
   #define MITSUBISHI_ELECTRIC
-  #define FUJITSU
-  #define MITSUBISHI_HEAVY
-  #define DAIKIN
-  #define SHARP_
-  #define CARRIER
-  #define PANASONIC_CKP
-  #define PANASONIC_CS
-  #define HYUNDAI
-  #define OLIMPIA // try model choice 3
-  #define GREE
-  #define GREE_YAC
-  #define FUEGO
-  #define TOSHIBA
-  #define NIBE
-  #define AIRWELL
-  #define HITACHI
-  #define SAMSUNG
-  #define BALLU
-  #define AUX
-  #define ZHLT01_REMOTE
-  #define ZHJG01_REMOTE
-  #define KY26_REMOTE
+  // #define FUJITSU
+  // #define MITSUBISHI_HEAVY
+  // #define DAIKIN
+  // #define SHARP_
+  // #define CARRIER
+  // #define PANASONIC_CKP
+  // #define PANASONIC_CS
+  // #define HYUNDAI
+  // #define OLIMPIA // try model choice 3
+  // #define GREE
+  // #define GREE_YAC
+  // #define FUEGO
+  // #define TOSHIBA
+  // #define NIBE
+  // #define AIRWELL
+  // #define HITACHI
+  // #define SAMSUNG
+  // #define BALLU
+  // #define AUX
+  // #define ZHLT01_REMOTE
+  // #define ZHJG01_REMOTE
+  // #define KY26_REMOTE
 #else
   // low-memory device,
   // uncomment the define corresponding with your remote
@@ -171,9 +171,9 @@ struct  AppSettings {
 };
 
 AppSettings appSettings = {
-  .printSymbols = false,
+  .printSymbols = true,
   .printPulses = false,
-  .printByteString = false,
+  .printByteString = true,
   .printTimings = false
 };
 
@@ -211,6 +211,8 @@ uint8_t modelChoice = 0;
 // Decoded bytes
 byte byteCount = 0;
 byte bytes[128];
+
+uint16_t pulses[1024];
 
 void setup(void) {
 
@@ -303,9 +305,9 @@ void setup(void) {
 }
 
 void loop(void) {
-
   memset(symbols, 0, sizeof(symbols));
   memset(bytes, 0, sizeof(bytes));
+  memset(pulses, 0, sizeof(pulses));
 
   currentpulse=0;
   byteCount=0;
@@ -327,6 +329,7 @@ void loop(void) {
     Serial.println("################# Start");
     printPulses();
     decodeProtocols();
+    printRawTimings();
     Serial.println("################# End ");
     Serial.println();
   }
@@ -459,6 +462,15 @@ bool getPinState() {
 #endif
 }
 
+void printRawTimings() {
+  Serial.print("Raw Timings: ");
+  for (uint16_t i = 0; i < currentpulse; i++) {
+    Serial.print(pulses[i]);
+    if (i < currentpulse - 1) Serial.print(",");
+  }
+  Serial.println();
+}
+
 void printPulses(void) {
 
   int bitCount = 0;
@@ -489,12 +501,21 @@ void printPulses(void) {
         Serial.print(byteCount); Serial.print(":  ");
       }
 
+      // Least significant bit first
       currentByte >>= 1;
       bitCount++;
 
       if (symbols[i] == '1') {
         currentByte |= 0x80;
       }
+
+      // Most significant bit first
+      // currentByte <<= 1;
+      // bitCount++;
+
+      // if (symbols[i] == '1') {
+      //   currentByte |= 0x01;
+      // }
 
       if (appSettings.printPulses) Serial.print(symbols[i]);
       if (bitCount == 4 && appSettings.printPulses) {
