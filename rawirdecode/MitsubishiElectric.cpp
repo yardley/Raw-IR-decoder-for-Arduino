@@ -14,7 +14,7 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
   if ( byteCount == 36 && bytes[0] == 0x23 &&
        ( (memcmp(bytes, bytes+18, 17) == 0) ||
          ((memcmp(bytes, bytes+18, 14) == 0) && bytes[32] == 0x24) ) ){
-    Serial.println(F("Looks like a Mitsubishi FD / FE / MSY series protocol"));
+    Serial.println(F("✅ Looks like a Mitsubishi FD / FE / MSY series protocol"));
 
     // Check if the checksum matches
     byte checksum = 0;
@@ -24,7 +24,7 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
     }
 
     if (checksum == bytes[17]) {
-      Serial.println(F("Checksum matches"));
+      Serial.println(F("✅ Checksum matches"));
     } else {
       Serial.println(F("Checksum does not match"));
     }
@@ -47,12 +47,15 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
     uint8_t operatingMode = bytes[6] & 0x38; // 0b00111000
     Serial.print(F("MODE "));
     switch (operatingMode) {
+      case 0x00:
+        Serial.println(F("I FEEL"));
+        break;
       case 0x38:
         Serial.println(F("FAN"));
         break;
-      case 0x20:
-        Serial.println(F("AUTO"));
-        break;
+      // case 0x20: Does not exist on MS-D36VC
+      //   Serial.println(F("AUTO"));
+      //   break;
       case 0x08:
         if (bytes[15] == 0x20) {
           Serial.println(F("MAINTENANCE HEAT (FE only)"));
@@ -153,9 +156,9 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
     uint8_t verticalAirDirection = bytes[9] & 0xF8; // 0b11111000
     Serial.print(F("VANE: "));
     switch (verticalAirDirection) {
-      case 0x40: // 0b01000
-        Serial.println(F("AUTO1?"));
-        break;
+      // case 0x40: // 0b01000
+      //   Serial.println(F("AUTO1?"));
+      //   break;
       case 0x48: // 0b01001
         Serial.println(F("UP"));
         break;
@@ -177,9 +180,9 @@ bool decodeMitsubishiElectric(byte *bytes, int byteCount)
       case 0x80: // 0b10000
         Serial.println(F("AUTO2?"));
         break;
-      case 0xB8: // 0b10111
-        Serial.println(F("AUTO3?"));
-        break;
+      // case 0xB8: // 0b10111
+      //   Serial.println(F("AUTO3?"));
+      //   break;
       default:
         printUnknownCode("Vertical air direction", verticalAirDirection);
         break;
